@@ -41,6 +41,11 @@
 			</exclusions>
 		</dependency>
 		<dependency>
+			<groupId>commons-lang</groupId>
+			<artifactId>commons-lang</artifactId>
+			<version>2.6</version>
+		</dependency>
+		<dependency>
 			<groupId>org.litote.kmongo</groupId>
 			<artifactId>kmongo</artifactId>
 			<version>3.3.5</version>

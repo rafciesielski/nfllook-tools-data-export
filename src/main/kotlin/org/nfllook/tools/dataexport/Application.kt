@@ -2,14 +2,18 @@ package org.nfllook.tools.dataexport
 
 import com.evalab.core.cli.Command
 import com.evalab.core.cli.exception.OptionException
-import com.mongodb.MongoClientURI
-import org.litote.kmongo.KMongo
+
+private val PATH = "path"
+private val SEASON = "season"
+private val URI = "uri"
 
 fun main(args: Array<String>) {
 
-    // --uri=mongodb://user:pass@host:28017/nfllookdb
+    // --path=F:/Data/NFLGameData --uri=mongodb://user:pass@host:28017/nfllookdb
     val command = Command("export", "Export nfllook data to MongoDB")
-    command.addStringOption("uri", true, 'u', "MongoDB connection string")
+    command.addStringOption(PATH, true, 'p', "Sets path to data directory")
+    command.addIntegerOption(SEASON, true, 's', "Sets season")
+    command.addStringOption(URI, true, 'u', "MongoDB connection string")
 
     try {
         command.parse(args)
@@ -19,11 +23,10 @@ fun main(args: Array<String>) {
         System.exit(2)
     }
 
-    val uri = command.getStringValue("uri")
+    val path = command.getStringValue(PATH)
+    val season = command.getIntegerValue(SEASON)
+    val uri = command.getStringValue(URI)
+    println("Path: $path season: $season, uri: $uri")
 
-    val client = KMongo.createClient(MongoClientURI(uri))
-    val database = client.getDatabase("nfllookdb")
-    val collection = database.getCollection("testCollection")
-
-    print(collection.count())
+    DataExporter(path!!, season!!, uri!!).export()
 }
