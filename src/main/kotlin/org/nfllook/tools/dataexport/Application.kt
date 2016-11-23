@@ -26,7 +26,8 @@ fun main(args: Array<String>) {
     val path = command.getStringValue(PATH)
     val season = command.getIntegerValue(SEASON)
     val uri = command.getStringValue(URI)
-    println("Path: $path season: $season, uri: $uri")
+
+    println("Path: $path season: $season, uri: ${uri!!.replace(Regex("//.*?@"), "//<user>:<pass>@")}")
 
     DataExporter(path!!, season!!, uri!!).export()
 }
