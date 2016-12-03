@@ -5,7 +5,7 @@
 
 	<groupId>org.nfllook.tools</groupId>
 	<artifactId>data-export</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>0.0.3</version>
 	<packaging>jar</packaging>
 
 	<name>nfllook-tools-data-export</name>
@@ -32,7 +32,7 @@
 		<dependency>
 			<groupId>org.nfllook.tools</groupId>
 			<artifactId>gen</artifactId>
-			<version>0.0.2-SNAPSHOT</version>
+			<version>0.0.3</version>
 			<exclusions>
 				<exclusion>
 					<groupId>org.jsonschema2pojo</groupId>

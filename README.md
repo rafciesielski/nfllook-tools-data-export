@@ -10,4 +10,4 @@ Export nfllook data to MongoDB
 mvnw clean install
 
 ## Run app
-java -jar target\data-export-0.0.1-SNAPSHOT.jar --path=$NFLGameData_Dir --season=$season --uri=$MongoDBUri
+java -jar target\data-export-0.0.3.jar --path=$NFLGameData_Dir --season=$season --uri=$MongoDBUri

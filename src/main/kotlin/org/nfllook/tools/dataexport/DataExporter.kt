@@ -8,8 +8,8 @@ import org.litote.kmongo.getCollection
 import org.nfllook.tools.generated.gd.Away
 import org.nfllook.tools.generated.gd.GameData
 import org.nfllook.tools.generated.gd.Home
-import org.nfllook.tools.generated.ws.Standings
-import org.nfllook.tools.generated.ws.Team
+import org.nfllook.tools.generated.wst.Standings
+import org.nfllook.tools.generated.wst.Team
 import java.io.File
 
 
@@ -41,7 +41,8 @@ class DataExporter(val path: String, val season: Int, uri: String) {
     }
 
     private fun processOneWeekData(weekDir: String) {
-        File(weekDir).list({ dir, fileName -> fileName.endsWith(".clean.json") })
+        standings.week++
+        File(weekDir).list({ dir, fileName -> (fileName.endsWith(".clean.json") && fileName != "schedule.clean.json") })
                 .forEach { processOneGameData("$weekDir/$it") }
     }
 

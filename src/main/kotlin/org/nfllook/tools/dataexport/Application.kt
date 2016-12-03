@@ -29,5 +29,5 @@ fun main(args: Array<String>) {
 
     println("Path: $path season: $season, uri: ${uri!!.replace(Regex("//.*?@"), "//<user>:<pass>@")}")
 
-    DataExporter(path!!, season!!, uri!!).export()
+    DataExporter(path!!, season!!, uri).export()
 }
