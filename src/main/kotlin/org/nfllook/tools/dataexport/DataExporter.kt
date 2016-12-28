@@ -1,58 +1,48 @@
 package org.nfllook.tools.dataexport
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.mongodb.MongoClientURI
-import com.mongodb.client.MongoCollection
-import org.litote.kmongo.KMongo
-import org.litote.kmongo.getCollection
 import org.nfllook.tools.generated.gd.Away
-import org.nfllook.tools.generated.gd.GameData
 import org.nfllook.tools.generated.gd.Home
-import org.nfllook.tools.generated.wst.Standings
 import org.nfllook.tools.generated.wst.Team
 import java.io.File
+import java.util.*
 
 
-class DataExporter(val path: String, val season: Int, uri: String) {
+class DataExporter(val path: String, val season: Int, val dataService: DataService) {
 
     enum class GameResult {HOME_WIN, AWAY_WIN, DRAW }
 
-    val mapper = ObjectMapper()
-    val collection: MongoCollection<Standings>
-    var standings: Standings
-
-    init {
-        val url = ClassLoader.getSystemClassLoader().getResource("week_standings_bootstrap.json")
-        standings = mapper.readValue<Standings>(url, Standings::class.java)
-
-        val client = KMongo.createClient(MongoClientURI(uri))
-        val database = client.getDatabase("nfllookdb")
-        collection = database.getCollection<Standings>()
-        collection.drop()
-    }
+    var standings = dataService.getStandingsBootstrap()
 
     fun export() {
         val weekDirs = File("$path/$season").list()
         weekDirs.sortBy { it.toInt() }
         weekDirs.forEach {
-            processOneWeekData("$path/$season/$it")
-            pushWeekStandings(season, it, standings)
+            exportWeekStandings(it)
         }
     }
 
-    private fun processOneWeekData(weekDir: String) {
-        standings.week++
-        File(weekDir).list({ dir, fileName -> (fileName.endsWith(".clean.json") && fileName != "schedule.clean.json") })
-                .forEach { processOneGameData("$weekDir/$it") }
+    private fun exportWeekStandings(it: String) {
+        val week = it.toInt()
+        processWeekData(week)
+        pushWeekStandings(week)
     }
 
-    private fun processOneGameData(gameFile: String) {
+    private fun processWeekData(week: Int) {
+        standings.week = week
+        calcTeamsRecords(week)
+        calcOppsTeamsRecords(week)
+    }
 
-        val gameData = mapper.readValue<GameData>(File(gameFile), GameData::class.java)
+    private fun calcTeamsRecords(week: Int) {
+        val weekDir = "$path/$season/$week"
+        File(weekDir).list({ dir, fileName -> (fileName.endsWith(".clean.json") && fileName != "schedule.clean.json") })
+                .forEach { calcTeamsRecord("$weekDir/$it") }
+    }
 
+    private fun calcTeamsRecord(gameFile: String) {
+        val gameData = dataService.getGameData(gameFile)
         val homeTeam = findTeam(gameData.home.abbr)
         val awayTeam = findTeam(gameData.away.abbr)
-
         val gameResult = getGameResult(gameData.home, gameData.away)
         if (gameResult == GameResult.HOME_WIN) {
             homeTeam.wins++
@@ -63,6 +53,32 @@ class DataExporter(val path: String, val season: Int, uri: String) {
         } else {
             homeTeam.draws++
             awayTeam.draws++
+        }
+    }
+
+    private fun calcOppsTeamsRecords(week: Int) {
+        dataService.teamsScheduleMap.forEach {
+            val team = findTeam(it.key)
+            val teamSchedule = it.value
+            team.oppsOfPlayedGames.wins = 0
+            team.oppsOfPlayedGames.draws = 0
+            team.oppsOfPlayedGames.losses = 0
+            team.oppsOfRemainingGames.wins = 0
+            team.oppsOfRemainingGames.draws = 0
+            team.oppsOfRemainingGames.losses = 0
+            teamSchedule.games.forEach {
+                val opponent = findTeam(it.name)
+                if(it.week <= week.toInt()) {
+                    team.oppsOfPlayedGames.wins = team.oppsOfPlayedGames.wins + opponent.wins
+                    team.oppsOfPlayedGames.draws = team.oppsOfPlayedGames.draws + opponent.draws
+                    team.oppsOfPlayedGames.losses = team.oppsOfPlayedGames.losses + opponent.losses
+                }
+                if(it.week > week.toInt()) {
+                    team.oppsOfRemainingGames.wins = team.oppsOfRemainingGames.wins + opponent.wins
+                    team.oppsOfRemainingGames.draws = team.oppsOfRemainingGames.draws + opponent.draws
+                    team.oppsOfRemainingGames.losses = team.oppsOfRemainingGames.losses + opponent.losses
+                }
+            }
         }
     }
 
@@ -91,8 +107,9 @@ class DataExporter(val path: String, val season: Int, uri: String) {
         throw Exception("Could not find team: $abbr")
     }
 
-    private fun pushWeekStandings(season: Int, week: String, standing: Standings) {
+    private fun pushWeekStandings(week: Int) {
         standings.id = season.toString() + "_" + week
-        collection.insertOne(standing)
+        standings.uploadDate = Date().toString()
+        dataService.pushStandings(standings)
     }
 }

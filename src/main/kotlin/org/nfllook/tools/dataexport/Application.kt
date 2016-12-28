@@ -9,7 +9,6 @@ private val URI = "uri"
 
 fun main(args: Array<String>) {
 
-    // --path=F:/Data/NFLGameData --uri=mongodb://user:pass@host:28017/nfllookdb
     val command = Command("export", "Export nfllook data to MongoDB")
     command.addStringOption(PATH, true, 'p', "Sets path to data directory")
     command.addIntegerOption(SEASON, true, 's', "Sets season")
@@ -29,5 +28,5 @@ fun main(args: Array<String>) {
 
     println("Path: $path season: $season, uri: ${uri!!.replace(Regex("//.*?@"), "//<user>:<pass>@")}")
 
-    DataExporter(path!!, season!!, uri).export()
+    DataExporter(path!!, season!!, DataService(uri)).export()
 }
